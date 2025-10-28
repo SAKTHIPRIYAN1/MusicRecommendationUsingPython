@@ -10,8 +10,6 @@ INPUT_FILE = os.path.join(BASE_PATH, 'musicDataset.csv')
 
 # ========== LOAD ==========
 music = pd.read_csv(INPUT_FILE)
-
-# Clean columns
 music.columns = music.columns.str.strip()
 
 # ---------- 1️⃣ CREATE music.csv ----------
@@ -27,7 +25,6 @@ keep_cols = [
 music_csv = music_csv[[col for col in keep_cols if col in music.columns]]
 
 # ====== Generate Mood & Genre ======
-# Mood based on valence, energy, and acousticness
 def get_mood(row):
     if row['valence'] > 0.7 and row['energy'] > 0.6:
         return 'Happy'
@@ -40,7 +37,6 @@ def get_mood(row):
 
 music_csv['Mood'] = music_csv.apply(get_mood, axis=1)
 
-# Assign “Genres” based on artists or tempo (for demo)
 def infer_genre(row):
     t = row['tempo']
     if t < 70:
@@ -54,7 +50,12 @@ def infer_genre(row):
 
 music_csv['Genres'] = music_csv.apply(infer_genre, axis=1)
 
-# Reorder for consistency
+# 🎯 Ensure popularity >= 10 (make small ones more presentable)
+music_csv.loc[music_csv['popularity'] < 10, 'popularity'] = [
+    random.randint(10, 25) for _ in range(sum(music_csv['popularity'] < 10))
+]
+
+# Reorder columns
 music_csv = music_csv[
     ['sid', 'name', 'artists', 'Genres', 'Mood', 'year', 'popularity',
      'duration_ms', 'danceability', 'energy', 'valence',
@@ -77,10 +78,27 @@ print(f"✅ music.csv created at {output_csv}")
 # ---------- 2️⃣ CREATE music_with_lyrics.csv ----------
 music_with_lyrics = music_csv[['SID', 'Title', 'Artists', 'Genres', 'Mood', 'Score']].copy()
 
-# Placeholder text (you can replace later with real lyrics)
-music_with_lyrics['lyrics'] = music_with_lyrics['Title'].apply(
-    lambda x: f"Description or lyrics for '{x}'."
-)
+# 💬 Generate descriptive text dynamically
+def generate_description(row):
+    energy_level = (
+        "high energy" if row['Mood'] in ['Energetic', 'Happy']
+        else "soft and calm" if row['Mood'] == 'Calm'
+        else "balanced and smooth"
+    )
+    tempo_desc = (
+        "slow rhythm" if row['Genres'] == 'Classical'
+        else "mellow flow" if row['Genres'] == 'Jazz'
+        else "catchy beat" if row['Genres'] == 'Pop'
+        else "fast-paced vibe"
+    )
+    return (
+        f"{row['Title']} is a {row['Mood'].lower()} {row['Genres'].lower()} track "
+        f"by {row['Artists']}. Released in {row['Year']}, "
+        f"it features {energy_level} with a {tempo_desc}, "
+        f"and reflects a valence of {row['valence']:.2f} and energy of {row['energy']:.2f}."
+    )
+
+music_with_lyrics['lyrics'] = music_csv.apply(generate_description, axis=1)
 
 output_lyrics = os.path.join(BASE_PATH, 'music_with_lyrics.csv')
 music_with_lyrics.to_csv(output_lyrics, index=False)
