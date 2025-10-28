@@ -1,6 +1,6 @@
-# Anime Recommendation System
+# Music Recommendation System
 
-A standalone hybrid recommender system for anime using Content-Based, Collaborative, Knowledge-Based, and Hybrid approaches. Built with Python and Streamlit.
+A standalone hybrid recommender system for Music using Content-Based, Collaborative, Knowledge-Based, and Hybrid approaches. Built with Python and Streamlit.
 
 ## Features
 
