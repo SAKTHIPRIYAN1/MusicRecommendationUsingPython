@@ -69,6 +69,8 @@ def load_data():
     valid_ids = set(music_lyrics['SID'])
     music = music[music['SID'].isin(valid_ids)].copy()
 
+
+
     # ✅ Numeric column cleanup
     numeric_cols = [
         'Score', 'duration_ms', 'danceability', 'energy', 'valence',
